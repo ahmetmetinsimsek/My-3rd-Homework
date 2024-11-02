@@ -1,0 +1,123 @@
+
+
+> library(readxl)
+> HW3_Dataset_Kopya <- read_excel("C:/Users/AHMET METİN/Desktop/HW3_Dataset - Kopya.xlsx")
+> View(HW3_Dataset_Kopya)
+> data <- read_excel("C:/Users/AHMET METİN/Desktop/HW3_Dataset - Kopya.xlsx")
+> library(ggplot2)
+> ggplot(data, aes(x = Policy_Rate, y = Inflation_Gap)) + geom_point() + labs(title = "Policy Rate vs Inflation Gap", x = "Policy Rate" , y = "Inflation Gap")
+> ggplot(data, aes(x = Policy_Rate, y = Output_Gap)) + geom_point() + labs(title = "Policy Rate vs Output Gap", x = "Policy Rate" , y = "Output Gap")
+> ggplot(data, aes(x = Inflation_Gap, y = Output_Gap)) + geom_point() + labs(title = "Inflation Gap vs Output Gap", x = "Inflation Gap" , y = "Output Gap")
+> library(ggcorrplot)
+> cor_matrix <- cor(data[, c("Policy_Rate", "Inflation_Gap", "Output_Gap")])
+> ggcorrplot(cor_matrix, lab = TRUE, method = "circle")
+> library(psych)
+
+Attaching package: ‘psych’
+
+The following objects are masked from ‘package:ggplot2’:
+  
+  %+%, alpha
+
+> describe(data[, c("Policy_Rate", "Inflation_Gap", "Output_Gap")])
+vars  n    mean     sd  median trimmed    mad     min    max   range  skew kurtosis    se
+Policy_Rate      1 42    0.04   0.03    0.04    0.04   0.03    0.00   0.11    0.11  0.46    -0.48  0.00
+Inflation_Gap    2 42 -152.95 296.44 -102.65 -133.61 270.32 -858.35 387.40 1245.75 -0.53    -0.47 45.74
+Output_Gap       3 42   -1.13   2.00   -0.91   -0.99   1.97   -6.44   1.92    8.36 -0.61    -0.23  0.31
+> ggplot(data, aes(x = 1:nrow(data), y = Policy_Rate)) + geom_line() + labs(title = "Policy Rate Over Time", x = "Time", y = "Policy_Rate")
+> ggplot(data, aes(x = 1:nrow(data), y = Inflation_Gap)) + geom_line() + labs(title = "Inflation Gap Over Time", x = "Time", y = "Infalation_Gap")
+> ggplot(data, aes(x = 1:nrow(data), y = Output_Gap)) + geom_line() + labs(title = "Output Gap Over Time", x = "Time", y = "Output_Gap")
+> library(dynlm)
+Zorunlu paket yükleniyor: zoo
+
+Attaching package: ‘zoo’
+
+The following objects are masked from ‘package:base’:
+  
+  as.Date, as.Date.numeric
+
+> library(ARDL)
+To cite the ARDL package in publications:
+  
+  Use this reference to refer to the validity of the ARDL package.
+
+Natsiopoulos, Kleanthis, and Tzeremes, Nickolaos G. (2022). ARDL bounds test for cointegration: Replicating the Pesaran et al.
+(2001) results for the UK earnings equation using R. Journal of Applied Econometrics, 37(5), 1079-1090.
+https://doi.org/10.1002/jae.2919
+
+Use this reference to cite this specific version of the ARDL package.
+
+Kleanthis Natsiopoulos and Nickolaos Tzeremes (2023). ARDL: ARDL, ECM and Bounds-Test for Cointegration. R package version
+0.2.4. https://CRAN.R-project.org/package=ARDL
+> 
+  > taylor_model <- dynlm(Policy_Rate ~ Inflation_Gap + Output_Gap, data = data)
+> summary(taylor_model)
+
+Time series regression with "numeric" data:
+  Start = 1, End = 42
+
+Call:
+  dynlm(formula = Policy_Rate ~ Inflation_Gap + Output_Gap, data = data)
+
+Residuals:
+  Min        1Q    Median        3Q       Max 
+-0.022283 -0.013861 -0.001179  0.009803  0.032750 
+
+Coefficients:
+  Estimate Std. Error t value Pr(>|t|)    
+(Intercept)    4.134e-02  2.789e-03  14.823  < 2e-16 ***
+  Inflation_Gap  1.884e-04  2.194e-05   8.588 1.58e-10 ***
+  Output_Gap    -2.413e-02  3.254e-03  -7.415 5.81e-09 ***
+  ---
+  Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.01569 on 39 degrees of freedom
+Multiple R-squared:  0.6603,	Adjusted R-squared:  0.6429 
+F-statistic:  37.9 on 2 and 39 DF,  p-value: 7.186e-10
+
+> bounds_f_results <- bounds_f_test(best_model, case = 3)
+Hata: 'best_model' nesnesi bulunamadı
+> best_model <- bounds_test$best_model
+Hata: 'bounds_test' nesnesi bulunamadı
+> bounds_test <-auto_ardl(Policy_Rate ~ Infaltion_Gap + Output_Gap, data = data, max_order = c(4,4,4))
+Hata: Variable(s) 'Infaltion_Gap', not found in 'data'
+> bounds_test <-auto_ardl(Policy_Rate ~ Inflation_Gap + Output_Gap, data = data, max_order = c(4,4,4))
+> summary(bounds_test)
+Length Class      Mode   
+best_model 19     dynlm      list   
+best_order  3     -none-     numeric
+top_orders  4     data.frame list   
+> best_model <-bounds_test$best_model
+> bounds_f_result <- bounds_f_test(best_model, case = 3)
+> summary(bounds_f_result)
+Length Class      Mode     
+method      1      -none-     character
+alternative 1      -none-     character
+statistic   1      -none-     numeric  
+null.value  2      -none-     numeric  
+data.name   2      -none-     character
+p.value     1      -none-     numeric  
+tab         2      data.frame list     
+> str(bounds_f_result)
+List of 7
+$ method     : chr "Bounds F-test (Wald) for no cointegration"
+$ alternative: chr "Possible cointegration"
+$ statistic  : Named num 10.5
+..- attr(*, "names")= chr "F"
+$ null.value : Named num [1:2] 2 1000
+..- attr(*, "names")= chr [1:2] "k" "T"
+$ data.name  : chr [1:2] "d(Policy_Rate) ~ L(Policy_Rate, 1) + Inflation_Gap + L(Output_Gap, " "    1) + d(Output_Gap)"
+$ p.value    : Named num 0.000231
+..- attr(*, "names")= chr "p_value.F"
+$ tab        :'data.frame':	1 obs. of  2 variables:
+  ..$ statistic: num 10.5
+..$ p.value  : num 0.000231
+- attr(*, "class")= chr "htest"
+> bounds_f_results$statistic
+Hata: 'bounds_f_results' nesnesi bulunamadı
+> bounds_f_result$statistic
+F 
+10.51664 
+> bounds_f_result$tab
+statistic      p.value
+F  10.51664 0.0002314444
